@@ -25,6 +25,7 @@
   <li> Retrieving and displaying specific content from remote web pages</li>
   <li> Following guidelines of the <i>robots.txt</i> files</li>
   <li> Storing data in flat file</li>
+  <li> Case sensitive and insensitive search</li>
   
 </ul>
 
@@ -40,7 +41,8 @@
   <b> Seed URL </b> : https://archive.org/web/ <br>
   <b> String to Search </b> : "tools" <br>
   <b> Max Depth for Search </b> : 4<br><br><br>
-  <img width="1059" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/9c3b5d8e-1c64-4226-8d42-c474eb65b2a1">
+  <img width="992" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/0ddfe3d7-f9f2-4eac-a431-bc9b860f352b">
+
 </p><br>
 
 <h1> Validating User Input</h1>
@@ -61,8 +63,16 @@
 <img width="1229" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/98c24e9a-7a42-4b0c-a82e-67508f5bbd8a">
 <img width="1420" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/98296415-dd8b-4d1d-97d7-931333543772">
 
+<h1> Case Sensitive Search</h1>
+Results for case sensitive Search - I
+<img width="1346" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/06473451-5e27-417e-9eef-b6373299abf4">
+<br> Results for case sensitive Search - II
+<img width="1384" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/87bf98a0-776a-4d7d-9ea9-a4dd82fe8e01">
 
 
+
+<br> Results for case insensitive Search 
+<img width="1337" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/bbf1f298-3494-408c-b316-b85353b3f35e">
 
 <br>
 <h1> Search Results For Default Input</h1>
