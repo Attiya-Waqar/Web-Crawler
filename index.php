@@ -19,35 +19,39 @@
 			// creating array to store the links
 			$links = array($url);
 			$count = 0;
-		
+			$depth = 0;
 		?>
 
 		<!-- basic html for headings and form -->
 		<form method="post">
 			<!-- Seed url -->
 			<div class="row justify-content-center mt-5">
-				<div class="col-8"> <h6 class="display-6"> Seed URL </h6> </div>
+				<div class="col-8"> <h3> Seed URL </h3> </div>
 			</div> 
-			<div class="row justify-content-center my-4">
+			<div class="row justify-content-center my-3">
 				<div class="col-4">
 					<input class="form-control" type="text" name="seed_url" value="https://archive.org/web/"> 
 				</div>
 			</div>
 
 			<!-- String to Search -->
-			<div class="row justify-content-center mt-5">
-				<div class="col-8"> <h6 class="display-6"> String To Search </h6> </div>
+			<div class="row justify-content-center mt-3">
+				<div class="col-4"> <h4> String To Search </h4> </div>
+				<div class="col-4"> <h4> Max Depth for Search </h4> </div>
 			</div>
-			<div class="row justify-content-center my-4">
+			<div class="row justify-content-center my-3">
 				<div class="col-4">
-					<input class="form-control" type="text" name="search_string" placeholder="string to search" required> 
+					<input class="form-control" type="text" name="search_string" value="tools" required> 
+				</div>
+				<div class="col-4">
+					<input class="form-control" type="number" name="max-depth" value=4 required> 
 				</div>
 			</div>
 			
 			<!-- Submit Button -->
-			<div class="row justify-content-center my-4">
+			<div class="row justify-content-center">
 				<div class="col-4">
-					<input type="submit" name="enter" class="mt-3 btn btn-secondary" id="string-to-search" value="Search">
+					<input type="submit" name="enter" class="mt-3 btn btn-secondary shadow px-4" id="string-to-search" value="Search">
 				</div>
 			</div>
 		</form>
@@ -59,9 +63,11 @@
 			{
 				global $links;
 				global $count;
+				global $depth;
+				global $max_depth;
 
 				// if depth is reached
-				if ($count >= 10)
+				if ($depth >= $max_depth)
 					return;
 
 				else
@@ -80,6 +86,7 @@
 					// Query for all anchor tags
 					$anchorTags = $xpath->query('//a[@href[starts-with(.,"https")]]');
 
+
 					$i=0;
 					foreach($anchorTags as $tag)
 					{
@@ -93,6 +100,9 @@
 							if (in_array($href, $links))
 								continue;
 
+						// adding metadata to corresponding array
+						$data[$count] = $metaTags;
+
 						$i=$i+1;
 						$count = $count + 1;
 						$links[$count] = $href;
@@ -100,17 +110,33 @@
 						// recrusively calling the function again on another url
 						open_page($href);
 					}
+					$depth = $depth + 1;
 				}
 			}
 
 			// if search input is submitted
 			if (isset($_POST['enter']))
 			{
+				global $max_depth;
+
 				// getting the string to search
 				$string_to_find = $_POST['search_string'];
 				$url = $_POST['seed_url'];
-				echo "<h3> Searching for '<i>$string_to_find</i>' </h3>";
-				echo "This might take a minute<br>";
+				$max_depth = $_POST['max-depth'];
+				echo "<h4 style='color:grey'> Searching for '<i>$string_to_find</i>' </h4>";
+
+			?>
+
+			<div id="hide" style="color:grey"> This might take a minute </div>
+
+			<script>
+				setTimeout(function() 
+				{
+				  document.getElementById("hide").style.display = 'none';
+				}, 5000);
+			</script>
+
+			<?php
 				open_page($url);
 				crawler($string_to_find);
 			}
@@ -119,10 +145,11 @@
 			function crawler($string_to_find)
 			{
 				global $links;
+
 				foreach($links as $link)
 				{
 					// Create a DOMDocument object
-					$dom = new DOMDocument;
+					$dom = new DOMDocument();
 
 					$content = file_get_contents($link);
 
@@ -132,14 +159,28 @@
 					// Create a DOMXPath object to query the DOM
 					$xpath = new DOMXPath($dom);
 
+					// getting metadata
+					$title = $dom->getElementsByTagName('title')->item(0)->nodeValue;
+					$paragraphs = $dom->getElementsByTagName('p');
+					$description .= $paragraphs[0]->nodeValue . ' ';
+					// Trim excess whitespace
+    				$description = trim($description);
+					
+
+					echo "<h3><a href=$link>$title</a></h3>
+					<div style='color:grey'><i>$link</i></div>
+					<p>$description</p>";
+
+
 					// searching for the string in the webpage
 					if (stripos($content, $string_to_find) !== false) 
 					{
 						$occurreces = substr_count($content, $string_to_find);
-					    echo "String occurs $occurreces times in the web page <i>$link</i><br>";
+					    echo "<b><i>String occurs $occurreces times.</b></i><br>";
 					} 
 					else 
-					    echo "<span style='font-weight:200px'>String not found in the web page <i>$link</i></span><br>";
+					    echo "<span style='font-weight:200px'><b><i>String NOT found</b></i></span><br>";
+					echo "<br>";
 				}
 			}
 		?>
