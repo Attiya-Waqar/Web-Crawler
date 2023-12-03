@@ -13,11 +13,10 @@
 
 	<div class="container text-center">
 		<?php
-
 			//$url = "https://en.wikipedia.org/wiki/Microsoft";
 			$url = "https://archive.org/web/";
 			// creating array to store the links
-			$links = array($url);
+			$links = array();
 			$count = 0;
 			$depth = 0;
 		?>
@@ -72,58 +71,82 @@
 
 				else
 				{
-					// Create a DOMDocument object
-					$dom = new DOMDocument;
+					// Fetch HTTP headers to check for errors
+					$headers = get_headers($page_url);
+					// Get the HTTP status code
+					$httpStatusCode = (int) substr($headers[0], 9, 3);
 
-					$content = file_get_contents($page_url);
-
-					// Load the HTML content into the DOMDocument
-					@$dom->loadHTML($content);
-
-					// Create a DOMXPath object to query the DOM
-					$xpath = new DOMXPath($dom);
-
-					// Query for all anchor tags
-					$anchorTags = $xpath->query('//a[@href[starts-with(.,"https")]]');
-
-
-					$i=0;
-					foreach($anchorTags as $tag)
+					// Check for a 404 status code
+					if ($httpStatusCode === 404) 
 					{
-						if ($count >= 10)
-							return;
-						if ($i >= 5 || $i>=$anchorTags->length)
-							break;
-						$href = $tag->getAttribute('href');
-						// if url't already exist in array
-						if (!is_null($links))
-							if (in_array($href, $links))
-								continue;
-
-						// adding metadata to corresponding array
-						$data[$count] = $metaTags;
-
-						$i=$i+1;
-						$count = $count + 1;
-						$links[$count] = $href;
-						
-						// recrusively calling the function again on another url
-						open_page($href);
+						if ($count == 0)
+							exit("404 - Page Not Found Error");
+					    echo "<br>The page does not exist (404 error).";
+					    return;
 					}
-					$depth = $depth + 1;
+
+					else
+					{
+						// Create a DOMDocument object
+						$dom = new DOMDocument;
+
+						$content = file_get_contents($page_url);
+
+						// Load the HTML content into the DOMDocument
+						@$dom->loadHTML($content);
+
+						// Create a DOMXPath object to query the DOM
+						$xpath = new DOMXPath($dom);
+
+						// Query for all anchor tags
+						$anchorTags = $xpath->query('//a[@href[starts-with(.,"https")]]');
+
+
+						$i=0;
+						foreach($anchorTags as $tag)
+						{
+							if ($count >= 10)
+								return;
+							if ($i >= 5 || $i>=$anchorTags->length)
+								break;
+							$href = $tag->getAttribute('href');
+							// if url't already exist in array
+							if (!is_null($links))
+								if (in_array($href, $links))
+									continue;
+
+							// adding metadata to corresponding array
+							$data[$count] = $metaTags;
+
+							$i=$i+1;
+							$count = $count + 1;
+							$links[$count] = $href;
+							
+							// recrusively calling the function again on another url
+							open_page($href);
+						}
+						$depth = $depth + 1;
+					}
 				}
 			}
 
-			// if search input is submitted
+			// when search input is submitted
 			if (isset($_POST['enter']))
 			{
 				global $max_depth;
+				global $links;
 
 				// getting the string to search
 				$string_to_find = $_POST['search_string'];
 				$url = $_POST['seed_url'];
 				$max_depth = $_POST['max-depth'];
-				echo "<h4 style='color:grey'> Searching for '<i>$string_to_find</i>' </h4>";
+
+				echo "$url<br>";
+				if (!filter_var($url, FILTER_VALIDATE_URL))
+					exit("Invalid URL Error");
+
+				$links[0] = $url;
+				echo "<h4 style='color:grey' class='mt-2'> Searching for '<i>$string_to_find</i>' </h4>";
 
 			?>
 
