@@ -19,10 +19,11 @@
 			$links = array();
 			$count = 0;
 			$depth = 0;
+			$case_sensitive_search = false;
 		?>
 
 		<!-- basic html for headings and form -->
-		<form method="post">
+		<form method="post" id="search-form">
 			<!-- Seed url -->
 			<div class="row justify-content-center mt-5">
 				<div class="col-8"> <h3> Seed URL </h3> </div>
@@ -45,6 +46,11 @@
 				<div class="col-4">
 					<input class="form-control" type="number" name="max-depth" value=4 required> 
 				</div>
+				<div class="row justify-content-center mt-3">
+					<label for="case-sensitivity">Case Sensitive Search</label>
+    				<input type="checkbox" name="case-sensitivity" id="case-sensitivity" checked>
+				</div>
+
 			</div>
 			
 			<!-- Submit Button -->
@@ -55,6 +61,14 @@
 			</div>
 		</form>
 		<br>
+
+		<!-- <script>
+		document.getElementById("search-form").addEventListener("submit", function(event) 
+		{
+		    // Prevent the default form submission behavior
+		    event.preventDefault();
+		});
+		</script> -->
 
 		<?php
 			// recursive function for opening pages and finding links
@@ -135,11 +149,17 @@
 			{
 				global $max_depth;
 				global $links;
+				global $case_sensitive_search;
 
 				// getting the string to search
 				$string_to_find = $_POST['search_string'];
 				$url = $_POST['seed_url'];
 				$max_depth = $_POST['max-depth'];
+
+				// if case-sensitive search is unset
+				if (!isset($_POST['case-sensitivity']))
+					$case_sensitive_search = false;
+
 
 				if (!filter_var($url, FILTER_VALIDATE_URL))
 					exit("Invalid URL Error<br><i>$url</i>");
@@ -167,6 +187,7 @@
 			function crawler($string_to_find)
 			{
 				global $links;
+				global $case_sensitive_search;;
 				$path = "content.txt";
 
 				// write date and time to top of file
@@ -202,17 +223,35 @@
 					<p>$description</p>";
 
 
-					// searching for the string in the webpage
-					if (stripos($content, $string_to_find) !== false) 
+					if ($case_sensitive_search == true)
 					{
-						$occurreces = substr_count($content, $string_to_find);
-					    echo "<b><i>String occurs $occurreces times.</b></i><br>";
-					    file_put_contents($path, "String occurs $occurreces times." . "\n\n", FILE_APPEND);
-					} 
-					else 
+						// searching for the string in the webpage
+						if (strpos($content, $string_to_find) !== false) 
+						{
+							$occurreces = substr_count($content, $string_to_find);
+						    echo "<b><i>String occurs $occurreces times.</b></i><br>";
+						    file_put_contents($path, "String occurs $occurreces times." . "\n\n", FILE_APPEND);
+						} 
+						else 
+						{
+						    echo "<span style='font-weight:200px'><b><i>String NOT found</b></i></span><br>";
+						    file_put_contents($path, "String NOT found" . "\n\n", FILE_APPEND);
+						}
+					}
+					else
 					{
-					    echo "<span style='font-weight:200px'><b><i>String NOT found</b></i></span><br>";
-					    file_put_contents($path, "String NOT found" . "\n\n", FILE_APPEND);
+						// searching for the string in the webpage
+						if (stripos($content, $string_to_find) !== false) 
+						{
+							$occurreces = substr_count($content, $string_to_find);
+						    echo "<b><i>String occurs $occurreces times.</b></i><br>";
+						    file_put_contents($path, "String occurs $occurreces times." . "\n\n", FILE_APPEND);
+						} 
+						else 
+						{
+						    echo "<span style='font-weight:200px'><b><i>String NOT found</b></i></span><br>";
+						    file_put_contents($path, "String NOT found" . "\n\n", FILE_APPEND);
+						}
 					}
 					echo "<br>";
 				}
