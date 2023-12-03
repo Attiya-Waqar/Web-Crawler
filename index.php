@@ -141,9 +141,8 @@
 				$url = $_POST['seed_url'];
 				$max_depth = $_POST['max-depth'];
 
-				echo "$url<br>";
 				if (!filter_var($url, FILTER_VALIDATE_URL))
-					exit("Invalid URL Error");
+					exit("Invalid URL Error<br><i>$url</i>");
 
 				$links[0] = $url;
 				echo "<h4 style='color:grey' class='mt-2'> Searching for '<i>$string_to_find</i>' </h4>";
@@ -168,6 +167,10 @@
 			function crawler($string_to_find)
 			{
 				global $links;
+				$path = "content.txt";
+
+				// write date and time to top of file
+				file_put_contents($path, date("F j, Y, g:i a")."\n");
 
 				foreach($links as $link)
 				{
@@ -188,7 +191,11 @@
 					$description .= $paragraphs[0]->nodeValue . ' ';
 					// Trim excess whitespace
     				$description = trim($description);
-					
+
+    				// write to file
+					file_put_contents($path, $title . "\n", FILE_APPEND);
+					file_put_contents($path, $link . "\n", FILE_APPEND);
+					file_put_contents($path, $description . "\n", FILE_APPEND);
 
 					echo "<h3><a href=$link>$title</a></h3>
 					<div style='color:grey'><i>$link</i></div>
@@ -200,11 +207,17 @@
 					{
 						$occurreces = substr_count($content, $string_to_find);
 					    echo "<b><i>String occurs $occurreces times.</b></i><br>";
+					    file_put_contents($path, "String occurs $occurreces times." . "\n\n", FILE_APPEND);
 					} 
 					else 
+					{
 					    echo "<span style='font-weight:200px'><b><i>String NOT found</b></i></span><br>";
+					    file_put_contents($path, "String NOT found" . "\n\n", FILE_APPEND);
+					}
 					echo "<br>";
 				}
+
+				fclose($file_handle);
 			}
 		?>
 	</div>
