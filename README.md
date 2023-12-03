@@ -57,6 +57,10 @@
   <img width="445" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/e2f9e097-4614-4d30-9893-b98c8081d148">
 </p><br>
 
+<h1> Writing Results to a Flat File</h1>
+<img width="1229" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/98c24e9a-7a42-4b0c-a82e-67508f5bbd8a">
+<img width="1420" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/98296415-dd8b-4d1d-97d7-931333543772">
+
 
 
 
