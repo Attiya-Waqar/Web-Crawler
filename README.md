@@ -26,10 +26,16 @@
   <li> Following guidelines of the <i>robots.txt</i> files</li>
   <li> Storing data in flat file</li>
   <li> Case sensitive and insensitive search</li>
+  <li> Following Robots.txt files </li>
   
 </ul>
 
 <h3> Implementation </h3>
+The script starts with a seed url, max depth for search and the string to search which have default values but can be changed by the user.
+The browser gets the robots.txt file of the url (if it exists). 
+It then gets all the valid remote links inside the web page and adds them to an array if the link is not prohibited by the robots.txt file of that page.
+After reaching the speicifed depth, the code transfers to the search portion of the program where it searches for the user-set string in the array of sub-anchor tags and displays how many times it occurs.
+The search can be case-sensitive or case-insensitive depending on setting set by user before search.
 
 <h1>User Input</h1> 
 <p> 
@@ -71,8 +77,12 @@ Results for case sensitive Search - I
 
 
 
-<br> Results for case insensitive Search 
+<br> Results for case insensitive Search  - I
 <img width="1337" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/bbf1f298-3494-408c-b316-b85353b3f35e">
+<br> Results for case insensitive Search  - II
+<img width="1354" alt="image" src="https://github.com/Attiya-Waqar/Web-Crawler/assets/107126273/b3b910b7-2c18-480c-82cf-ce9e28e4ceac">
+
+<h1> Abiding by Robots.txt file of a website if it exists</h1>
 
 <br>
 <h1> Search Results For Default Input</h1>
