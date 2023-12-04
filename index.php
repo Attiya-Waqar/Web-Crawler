@@ -13,24 +13,29 @@
 
 	<div class="container text-center">
 		<?php
-			//$url = "https://en.wikipedia.org/wiki/Microsoft";
-			$url = "https://archive.org/web/";
-			// creating array to store the links
-			$links = array();
-			$count = 0;
-			$depth = 0;
-			$case_sensitive_search = false;
+		// Turn off warnings
+		error_reporting(E_ERROR | E_PARSE);
+
+		$seed_url = "https://archive.org/web";
+		//$seed_url = "https://www.yelp.com";
+		$search_string = "tools";
+		$max_depth = 4;
+		// creating array to store the links
+		$links = array();
+		$count = 0;
+		$depth = 0;
+		$case_sensitive_search = false;
 		?>
 
 		<!-- basic html for headings and form -->
-		<form method="post" id="search-form">
+		<form method="post" id="search-form" action="">
 			<!-- Seed url -->
 			<div class="row justify-content-center mt-5">
 				<div class="col-8"> <h3> Seed URL </h3> </div>
 			</div> 
 			<div class="row justify-content-center my-3">
 				<div class="col-4">
-					<input class="form-control" type="text" name="seed_url" value="https://archive.org/web/"> 
+					<input class="form-control" type="text" name="seed_url" value='<?php echo htmlspecialchars($seed_url); ?>'> 
 				</div>
 			</div>
 
@@ -41,14 +46,14 @@
 			</div>
 			<div class="row justify-content-center my-3">
 				<div class="col-4">
-					<input class="form-control" type="text" name="search_string" value="tools" required> 
+					<input class="form-control" type="text" name="search_string" id="search_string" value="<?php echo htmlspecialchars($search_string); ?>" required> 
 				</div>
 				<div class="col-4">
-					<input class="form-control" type="number" name="max-depth" value=4 required> 
+					<input class="form-control" type="number" name="max-depth" value="<?php echo htmlspecialchars($max_depth); ?>" required> 
 				</div>
 				<div class="row justify-content-center mt-3">
 					<label for="case-sensitivity">Case Sensitive Search</label>
-    				<input type="checkbox" name="case-sensitivity" id="case-sensitivity" checked>
+    				<input type="checkbox" name="case-sensitivity" id="case-sensitivity">
 				</div>
 
 			</div>
@@ -61,14 +66,6 @@
 			</div>
 		</form>
 		<br>
-
-		<!-- <script>
-		document.getElementById("search-form").addEventListener("submit", function(event) 
-		{
-		    // Prevent the default form submission behavior
-		    event.preventDefault();
-		});
-		</script> -->
 
 		<?php
 			// recursive function for opening pages and finding links
@@ -93,7 +90,7 @@
 					// Check for a 404 status code
 					if ($httpStatusCode === 404) 
 					{
-						if ($count == 0)
+						//if ($count == 0)
 							exit("404 - Page Not Found Error");
 					    echo "<br>The page does not exist (404 error).";
 					    return;
@@ -115,6 +112,25 @@
 						// Query for all anchor tags
 						$anchorTags = $xpath->query('//a[@href[starts-with(.,"https")]]');
 
+						// get contents of the robots.txt file
+						$robots_txt = $page_url."/robots.txt";
+						$robotsTxtContent = file_get_contents($robots_txt);
+						//echo "$robotsTxtContent<br>";
+
+						// Fetch HTTP headers to check for errors
+						$headers = get_headers($robots_txt);
+						// Get the HTTP status code
+						$httpStatusCode = (int) substr($headers[0], 9, 3);
+
+						// Check for a 404 status code
+						if ($httpStatusCode === 404) 
+						{
+							if ($count == 0)
+								exit("404 - Page Not Found Error");
+						    echo "<h6><br> 404 ERROR -  robots.txt does not exist for this page<br></h6>";
+						    return;
+						}
+
 
 						$i=0;
 						foreach($anchorTags as $tag)
@@ -124,10 +140,21 @@
 							if ($i >= 5 || $i>=$anchorTags->length)
 								break;
 							$href = $tag->getAttribute('href');
+							//echo "$page_url/<br>";
+							$check_href = explode('$page_url', $href);
 							// if url't already exist in array
 							if (!is_null($links))
 								if (in_array($href, $links))
 									continue;
+
+							//echo "CHECK $page_url - $check_href[0]<br>";
+
+							// check if robots.txt file allows us to add that url
+							if (stripos($robotsTxtContent, $check_href[0]) !== false) 
+							{
+								//echo "<i>$robots_txt</i> NOT ALLOWED BY ROBOTS.TXT FILE<br>";
+								continue;
+							}
 
 							// adding metadata to corresponding array
 							$data[$count] = $metaTags;
@@ -135,6 +162,8 @@
 							$i=$i+1;
 							$count = $count + 1;
 							$links[$count] = $href;
+
+							//echo $page_url."/robots.txt<br>";
 							
 							// recrusively calling the function again on another url
 							open_page($href);
@@ -145,11 +174,13 @@
 			}
 
 			// when search input is submitted
-			if (isset($_POST['enter']))
+			//if (isset($_POST['enter']))
+			if ($_SERVER['REQUEST_METHOD'] === 'POST')
 			{
 				global $max_depth;
 				global $links;
 				global $case_sensitive_search;
+				global $seed_url;
 
 				// getting the string to search
 				$string_to_find = $_POST['search_string'];
@@ -157,15 +188,16 @@
 				$max_depth = $_POST['max-depth'];
 
 				// if case-sensitive search is unset
-				if (!isset($_POST['case-sensitivity']))
-					$case_sensitive_search = false;
+				if (isset($_POST['case-sensitivity']))
+					$case_sensitive_search = true;
 
 
 				if (!filter_var($url, FILTER_VALIDATE_URL))
-					exit("Invalid URL Error<br><i>$url</i>");
+					exit("'<i>$url</i>' is an Invalid URL Error");
 
 				$links[0] = $url;
-				echo "<h4 style='color:grey' class='mt-2'> Searching for '<i>$string_to_find</i>' </h4>";
+				$sensitivity = $case_sensitive_search? "case-sensitive": "case-insensitive";
+				echo "<h4 style='color:grey' class='mt-2'> Searching for '<i>$string_to_find</i>' in <i> $seed_url <br> </i> using <i>$sensitivity search</i> with depth </i>$max_depth</i>  </h4><br>";
 
 			?>
 
@@ -187,7 +219,7 @@
 			function crawler($string_to_find)
 			{
 				global $links;
-				global $case_sensitive_search;;
+				global $case_sensitive_search;
 				$path = "content.txt";
 
 				// write date and time to top of file
@@ -223,9 +255,9 @@
 					<p>$description</p>";
 
 
-					if ($case_sensitive_search == true)
+					if ($case_sensitive_search === true)
 					{
-						// searching for the string in the webpage
+						// searching for the string in the webpage (CASE SENSITIVE)
 						if (strpos($content, $string_to_find) !== false) 
 						{
 							$occurreces = substr_count($content, $string_to_find);
@@ -240,10 +272,10 @@
 					}
 					else
 					{
-						// searching for the string in the webpage
+						// searching for the string in the webpage (CASE INSENSITIVE)
 						if (stripos($content, $string_to_find) !== false) 
 						{
-							$occurreces = substr_count($content, $string_to_find);
+							$occurreces = substr_count(strtolower($content), strtolower($string_to_find));
 						    echo "<b><i>String occurs $occurreces times.</b></i><br>";
 						    file_put_contents($path, "String occurs $occurreces times." . "\n\n", FILE_APPEND);
 						} 
@@ -256,7 +288,6 @@
 					echo "<br>";
 				}
 
-				fclose($file_handle);
 			}
 		?>
 	</div>
